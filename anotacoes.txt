@@ -1,0 +1,20 @@
+[OK] Caracois cheios
+[OK] Caracois com caixas pendentes
+[OK] Gerar atividade "Pallet Cheio no Sorter"
+[OK] Leitores rodando simultâneamente
+[OK] Ignorar leitura após um curto intervalo   
+[OK] Fluxo de pallet cheio
+
+
+[OK] Caixa não pertencde ao local - Caixa não pertence a este caracol. {caixa}
+[OK] Mudar pallet não disponível para -> "Pallet não disponível, leia outra caixa"
+[OK] (React) Aguardando Leitura - mudar para caixa lida e status para verde
+[OK] (Node, react) Leitura inválida - codigo não é de operador nem de caixa
+[OK] Mensagem de caixa lida sumindo instantâneamente
+
+[C#] Ao criar chamadas pallet cheio no sorter, colocar no campo chamada.id_pallet destino = null.  Atualmente está = 0
+
+Não está aparecendo o realizado da última hora
+(React) Pallet chegou e a tela não deu refresh... se poder dar nesse caso...
+
+Deslogar pessoa quando logar em outro caracol
