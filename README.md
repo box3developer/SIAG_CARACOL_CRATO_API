@@ -21,3 +21,13 @@ EXEC sp_siag_criachamada @id_atividade, @id_palletorigem, @id_areaarmazenagemori
 9. pedido
 10. posicaocaracolrefugo
 11. turno
+# Tabelas sem Model definido (uso diretamente em queries)
+12. programa -> GetFabrica -> CaixaBLL
+13. agrupadorativo -> GetAgrupadorStatus -> CaixaBLL
+14. parametro -> VerificaParametroEmail, GetMeta -> EquipamentoBLL, OperadorBLL
+15. atividade -> RotinaLuzVermelha,GerarAtividadePalletCheio -> EquipamentoBLL,PalletBLL
+16. chamada -> RotinaLuzVermelha -> EquipamentoBLL
+17. status_leitor -> AtualizaStatusLeitorAsync -> EquipamentoBLL
+18. operadorhistorico -> GetQtdCaixasPendentesLiderVirtual -> EquipamentoBLL
+19. desempenho -> CalcularPerformanceTurnoAtual -> OperadorBLL
+20. niveisagrupadores -> GetNivelAgrupador -> PalletBLL
