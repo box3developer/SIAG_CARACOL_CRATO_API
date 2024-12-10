@@ -31,3 +31,4 @@ EXEC sp_siag_criachamada @id_atividade, @id_palletorigem, @id_areaarmazenagemori
 18. operadorhistorico -> GetQtdCaixasPendentesLiderVirtual -> EquipamentoBLL
 19. desempenho -> CalcularPerformanceTurnoAtual -> OperadorBLL
 20. niveisagrupadores -> GetNivelAgrupador -> PalletBLL
+21. desempenhocaixa -> SELECT, INSERT -> sp_siag_gestaovisual_gravaperformance
