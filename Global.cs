@@ -9,6 +9,7 @@ namespace grendene_caracois_api_csharp
         //public static string Conexao = "Server=swsrvsob01;Database=SIAG;User Id=dev;Password=uDevFs01.;MultipleActiveResultSets=False;Encrypt=False;TrustServerCertificate=False;Connection Timeout=30";
         public static string Conexao = "Server=dbsiag.sob.ad-grendene.com;Database=SIAG;User Id=siag;Password=J2GpePekBTCzbh09OwVG;MultipleActiveResultSets=False;Encrypt=False;TrustServerCertificate=False;Connection Timeout=3000";
         public static string NodeRedUrl = "http://gra-lxsobcaracol.sob.ad-grendene.com:1880";
+        public static string SiagApi = "";
         public static List<TurnoSIAGModel>? Turnos = null;
         public static DateTime? DataTurnos = null;
         public static List<EficienciaModel>? Eficiencias = null;

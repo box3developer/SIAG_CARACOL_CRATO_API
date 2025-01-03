@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Dapper;
+using dotnet_api.Integration;
 using dotnet_api.Models;
 using dotnet_api.ModelsNodeRED;
 using dotnet_api.ModelsSIAG;
@@ -131,13 +132,13 @@ namespace dotnet_api.BLLs
                     throw new Exception("Código de barras inválido!");
                 }
 
-                var caixa = await CaixaBLL.GetCaixa(idCaixa);
+                var caixa = await SiagApi.GetCaixaByIdAsync(idCaixa);
                 var performanceDia = await OperadorBLL.CalcularPerformanceTurnoAtual(caracol.IdOperador ?? "", id_requisicao);
                 var performanceHora = await OperadorBLL.CalcularPerformanceHoraAtual(caracol.IdOperador ?? "", id_requisicao);
 
                 // var mensagem = new ParametroMensagemCaracolSIAGModel();
                 // var posicao = new PosicaoCaracolRefugoSIAGModel();
-                var fabrica = await GetFabrica(idCaixa);
+                var fabrica = await SiagApi.GetCaixaFabricaAsync(idCaixa);
 
                 var retorno = new RetornoCaracolRefugoModel();
 
@@ -225,7 +226,7 @@ namespace dotnet_api.BLLs
                                 if (equipamentoEstufada == null)
                                     throw new Exception("Equipamento da última leitura não encontrado!");
 
-                                var areaArmazenagemEstufada = await AreaArmazenagemBLL.GetAreaArmazenagem(caixaEstufada.IdAreaArmazenagem ?? "");
+                                var areaArmazenagemEstufada = await SiagApi.GetAreaArmazenagemById(long.Parse(caixaEstufada.IdAreaArmazenagem ?? ""));
 
                                 if (areaArmazenagemEstufada == null)
                                     throw new Exception("Área de armazename da última leitura não encontrada!");
@@ -290,7 +291,7 @@ namespace dotnet_api.BLLs
                                 };
                             }
                         }
-                        else if (caixa.IdAgrupador == null || await GetAgrupadorStatus(caixa.IdAgrupador.ToString() ?? "") == 4)
+                        else if (caixa.IdAgrupador == null || await SiagApi.GetStatusAgrupadorAtivo(caixa.IdAgrupador ?? Guid.Empty) == 4)
                         {
                             //TODO NOVA DEMANDA await GravarLeituraCaracolRefugo(idCaixa, caracol.IdOperador ?? "",  "1",  "59", caracol.IdEquipamento, caracol.IdEquipamento?.Substring(0,1) ?? "");
                             var posicao = await ParametroBLL.GetPosicaoCaracolRefugo("Caixa de refugo", null);
@@ -349,7 +350,8 @@ namespace dotnet_api.BLLs
                         }
                         else
                         {
-                            var areaArmazenagem = await AreaArmazenagemBLL.GetAreaArmazenagemByIdAgrupador(caixa.IdAgrupador.ToString());
+                            var areaArmazenagemList = await SiagApi.GetAreaArmazenagemByAgrupador(caixa.IdAgrupador);
+                            var areaArmazenagem = areaArmazenagemList[0];
 
                             if (areaArmazenagem == null)
                             {
@@ -485,7 +487,7 @@ namespace dotnet_api.BLLs
                 throw;
             }
         }
-
+         
         public static async Task<int> AcenderLuzVerde(string identificadorCaracol, int? identificadorGaiola)
         {
             try
@@ -569,7 +571,7 @@ namespace dotnet_api.BLLs
         {
             try
             {
-                var caixa = await GetCaixa(idCaixa);
+                var caixa = await SiagApi.GetCaixaByIdAsync(idCaixa);
 
                 if (caixa == null)
                 {
@@ -603,7 +605,7 @@ namespace dotnet_api.BLLs
                     throw new Exception("Pallet não encontrado.");
                 }
 
-                var areaArmazenagem = await AreaArmazenagemBLL.GetAreaArmazenagem(pallet.IdAreaArmazenagem ?? "");
+                var areaArmazenagem = await SiagApi.GetAreaArmazenagemById(long.Parse(pallet.IdAreaArmazenagem ?? ""));
 
                 if (areaArmazenagem == null)
                 {
@@ -714,7 +716,7 @@ namespace dotnet_api.BLLs
         {
             try
             {
-                var caixa = await GetCaixa(idCaixa);
+                var caixa = await SiagApi.GetCaixaByIdAsync(idCaixa);
 
                 if (caixa == null)
                     throw new Exception("Caixa não encotrada!");
@@ -724,7 +726,7 @@ namespace dotnet_api.BLLs
                 if (pallet == null)
                     throw new Exception("Pallet não encontrado.");
 
-                var areaArmazenagem = await AreaArmazenagemBLL.GetAreaArmazenagem(pallet.IdAreaArmazenagem ?? "");
+                var areaArmazenagem = await SiagApi.GetAreaArmazenagemById(long.Parse(pallet.IdAreaArmazenagem ?? ""));
 
                 if (areaArmazenagem == null)
                     throw new Exception("Área de armazenagem não encontrada.");
@@ -758,7 +760,7 @@ namespace dotnet_api.BLLs
         {
             try
             {
-                var caixa = await GetCaixa(idCaixa);
+                var caixa = await SiagApi.GetCaixaByIdAsync(idCaixa);
 
                 if (caixa == null)
                     throw new Exception("Caixa não encotrada!");
@@ -768,7 +770,7 @@ namespace dotnet_api.BLLs
                 if (pallet == null)
                     throw new Exception("Pallet não encontrado.");
 
-                var areaArmazenagem = await AreaArmazenagemBLL.GetAreaArmazenagem(idArea);
+                var areaArmazenagem = await SiagApi.GetAreaArmazenagemById(long.Parse(idArea));
 
                 if (areaArmazenagem == null)
                     throw new Exception("Área de armazenagem não encontrada.");
@@ -1113,7 +1115,7 @@ namespace dotnet_api.BLLs
                     "info"
                 );
 
-                var areaArmazenagem = await AreaArmazenagemBLL.GetAreaArmazenagemByPosicao(identificadorCaracol, posicaoY);
+                var areaArmazenagem = await SiagApi.GetAreaArmazenagemByPosicao(identificadorCaracol, posicaoY);
 
                 if (areaArmazenagem == null)
                 {
@@ -1235,7 +1237,7 @@ namespace dotnet_api.BLLs
         {
             try
             {
-                var areaArmazenagem = await AreaArmazenagemBLL.GetAreaArmazenagemByPosicao(identificadorCaracol, posicaoY);
+                var areaArmazenagem = await SiagApi.GetAreaArmazenagemByPosicao(identificadorCaracol, posicaoY);
 
                 if (areaArmazenagem == null)
                     throw new Exception("Área de armazenagem não encontrada.");
@@ -1336,7 +1338,6 @@ namespace dotnet_api.BLLs
                 throw;
             }
         }
-
 
         public static async Task<List<CaixaLeituraSIAGModel>> GetLeiturasTeste(string idEquipamento)
         {

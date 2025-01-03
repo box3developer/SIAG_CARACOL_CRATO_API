@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Dapper;
 using dotnet_api.DTOs;
+using dotnet_api.Integration;
 using dotnet_api.Models;
 using dotnet_api.ModelsNodeRED;
 using dotnet_api.ModelsSIAG;
@@ -484,7 +485,7 @@ namespace dotnet_api.BLLs
         {
             try
             {
-                var area = await AreaArmazenagemBLL.GetAreaArmazenagemByPosicao(identificadorCaracol, posicaoY);
+                var area = await SiagApi.GetAreaArmazenagemByPosicao(identificadorCaracol, posicaoY);
 
                 if (area == null)
                     throw new Exception("Área de armazenagem não encontrada.");

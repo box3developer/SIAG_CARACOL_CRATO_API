@@ -1,6 +1,7 @@
 
 using System.Transactions;
 using dotnet_api.BLLs;
+using dotnet_api.Integration;
 using dotnet_api.ModelsSIAG;
 using grendene_caracois_api_csharp;
 using Microsoft.AspNetCore.Mvc;
@@ -59,7 +60,7 @@ namespace dotnet_api.Controllers
                         throw ex;
                     }
 
-                    var areaArmazenagemAtualCaixa = await AreaArmazenagemBLL.GetAreaArmazenagem(palletAtualCaixa.IdAreaArmazenagem);
+                    var areaArmazenagemAtualCaixa = await SiagApi.GetAreaArmazenagemById(long.Parse(palletAtualCaixa.IdAreaArmazenagem??""));
 
                     var equipamentoCaixa = await EquipamentoBLL.GetEquipamentoByIdentificadorCaracol(areaArmazenagemAtualCaixa.IdentificadorCaracol ?? "");
 
@@ -89,7 +90,7 @@ namespace dotnet_api.Controllers
                     }
                     else
                     {
-                        await CaixaBLL.RemoverEstufamentoCaixa(caixa.IdCaixa);
+                        await SiagApi.RemoveEstufamento(caixa.IdCaixa ?? "");
                         await CaixaBLL.DesvincularCaixaComPallet(identificadorCaracol, areaArmazenagemCaixa.PosicaoY ?? 0, caixa.IdCaixa);
                     }
                 }
@@ -179,7 +180,7 @@ namespace dotnet_api.Controllers
                         throw new Exception("Código de barras inválido");
                     }
 
-                    var caixa = await CaixaBLL.GetCaixa(idCaixa);
+                    var caixa = await SiagApi.GetCaixaByIdAsync(idCaixa);
 
                     if (caixa == null)
                     {
@@ -197,7 +198,8 @@ namespace dotnet_api.Controllers
                         throw new Exception("Caixa não encontrada");
                     }
 
-                    var areaArmazenagemCaixa = await AreaArmazenagemBLL.GetAreaArmazenagemByIdAgrupador(caixa.IdAgrupador.ToString());
+                    var areaArmazenagemCaixaList = await SiagApi.GetAreaArmazenagemByAgrupador(caixa.IdAgrupador);
+                    var areaArmazenagemCaixa = areaArmazenagemCaixaList[0];
 
                     if (areaArmazenagemCaixa == null)
                     {
@@ -249,7 +251,7 @@ namespace dotnet_api.Controllers
 
                     // Verifica caixa pendente ----------------------------
                     equipamentoAtual = await VerificaCaixaPendente(caixa, identificadorCaracol, equipamentoAtual, areaArmazenagemCaixa);
-                    caixa = await CaixaBLL.GetCaixa(idCaixa); // atualiza status caixa
+                    caixa = await SiagApi.GetCaixaByIdAsync(idCaixa); // atualiza status caixa
 
 
                     if (equipamentoAtual.CdUltimaLeitura != null && equipamentoAtual.CdUltimaLeitura != idCaixa)
@@ -264,7 +266,7 @@ namespace dotnet_api.Controllers
                             "info"
                         );
 
-                        var dadosCaixaUltimaLeitura = await CaixaBLL.GetCaixa(equipamentoAtual.CdUltimaLeitura);
+                        var dadosCaixaUltimaLeitura = await SiagApi.GetCaixaByIdAsync(equipamentoAtual.CdUltimaLeitura);
 
                         if (dadosCaixaUltimaLeitura != null)
                         {
@@ -494,7 +496,9 @@ namespace dotnet_api.Controllers
 
                             await PalletBLL.TrocaPallet(identificadorCaracol ?? "", areaArmazenagemCaixa, equipamentoAtual, idCaixa, caixa, id_requisicao);
 
-                            areaArmazenagemCaixa = await AreaArmazenagemBLL.GetAreaArmazenagemByIdAgrupador(caixa.IdAgrupador.ToString());
+                            var areaArmazenagemCaixaListS = await SiagApi.GetAreaArmazenagemByAgrupador(caixa.IdAgrupador);
+                            areaArmazenagemCaixa = areaArmazenagemCaixaListS[0];
+
                             pallet = await PalletBLL.GetPalletByIdAreaArmazenagem(areaArmazenagemCaixa.IdAreaArmazenagem);
                         }
                         catch (Exception)
@@ -529,7 +533,9 @@ namespace dotnet_api.Controllers
                         Console.WriteLine("Pallet com status livre");
                         await PalletBLL.TrocaPallet(identificadorCaracol ?? "", areaArmazenagemCaixa, equipamentoAtual, idCaixa, caixa, id_requisicao);
 
-                        areaArmazenagemCaixa = await AreaArmazenagemBLL.GetAreaArmazenagemByIdAgrupador(caixa.IdAgrupador.ToString());
+                        var areaArmazenagemCaixaListT = await SiagApi.GetAreaArmazenagemByAgrupador(caixa.IdAgrupador);
+                        areaArmazenagemCaixa = areaArmazenagemCaixaListT[0];
+
                         pallet = await PalletBLL.GetPalletByIdAreaArmazenagem(areaArmazenagemCaixa.IdAreaArmazenagem);
                     }
 
@@ -551,7 +557,7 @@ namespace dotnet_api.Controllers
                             );
                     }
 
-                    await CaixaBLL.GravarLeitura(idCaixa, areaArmazenagemCaixa.IdAreaArmazenagem ?? "", pallet?.IdPallet ?? "");
+                    await SiagApi.GravaLeituraCaixa(idCaixa, int.Parse(areaArmazenagemCaixa.IdAreaArmazenagem??""), int.Parse(pallet?.IdPallet??""));
                     await CaixaBLL.AcenderLuzVerde(identificadorCaracol ?? "", areaArmazenagemCaixa.PosicaoY);
 
                     var performanceDia = await OperadorBLL.CalcularPerformanceTurnoAtual(equipamentoAtual.IdOperador ?? "", id_requisicao);
@@ -653,7 +659,7 @@ namespace dotnet_api.Controllers
                         throw new Exception("Última leitura não encontrada.");
                     }
 
-                    var caixa = await CaixaBLL.GetCaixa(idCaixa);
+                    var caixa = await SiagApi.GetCaixaByIdAsync(idCaixa);
 
                     if (caixa == null)
                     {
@@ -696,7 +702,9 @@ namespace dotnet_api.Controllers
                         throw new Exception("Estufamento: caracol sem usuario logado");
                     */
 
-                    var areaArmazenagem = await AreaArmazenagemBLL.GetAreaArmazenagemByIdAgrupador(caixa.IdAgrupador.ToString());
+                    var areaArmazenagemList = await SiagApi.GetAreaArmazenagemByAgrupador(caixa.IdAgrupador);
+                    var areaArmazenagem = areaArmazenagemList[0];
+
 
                     if (areaArmazenagem == null)
                     {
@@ -743,7 +751,7 @@ namespace dotnet_api.Controllers
                         );
 
                         await CaixaBLL.VincularCaixaComPallet(identificadorCaracol, areaArmazenagem.PosicaoY ?? 0, idCaixa, caixa.IdAgrupador.ToString() ?? "", id_requisicao);
-                        await CaixaBLL.EstufarCaixa(idCaixa, id_requisicao);
+                        await SiagApi.EstufarCaixa(idCaixa, id_requisicao);
                         await CaixaBLL.InserirDesempenho(idCaixa, equipamento.IdOperador, equipamento.IdEquipamento ?? "", areaArmazenagem.IdAreaArmazenagem ?? "", 0);
 
                         var temCaixasPendentes = await CaixaBLL.TemCaixasPendentes(caixa.IdAgrupador.ToString() ?? "");
@@ -761,15 +769,15 @@ namespace dotnet_api.Controllers
                             );
 
                             await PalletBLL.LiberaReservasAreaArmazenagem(areaArmazenagem.IdAgrupador, null, id_requisicao);
-                            await CaixaBLL.FinalizarAgrupador(caixa.IdAgrupador.ToString() ?? "", id_requisicao);
+                            await SiagApi.FinalizaAgrupador(caixa.IdAgrupador ?? Guid.Empty, id_requisicao);
                             await CaixaBLL.AcenderLuzVermelha(equipamento.NmIdentificador ?? "", areaArmazenagem.PosicaoY, id_requisicao);
-                            await CaixaBLL.LiberarAgrupador(caixa.IdAgrupador.ToString() ?? "", id_requisicao);
+                            await SiagApi.LiberaAgrupador(caixa.IdAgrupador ?? Guid.Empty, id_requisicao);
                             await PalletBLL.GerarAtividadePalletCheio(pallet.IdPallet ?? "", areaArmazenagem.IdAreaArmazenagem ?? "");
                             await CaixaBLL.EncherPallet(pallet.IdPallet ?? "", id_requisicao);
                             await CaixaBLL.LiberarAreaArmazenagem(caixa.IdAgrupador.ToString() ?? "", id_requisicao);
                         }
 
-                        await CaixaBLL.EmitirEstufamento(equipamento.NmIdentificador ?? "", id_requisicao);
+                        await SiagApi.EmitirEstufamentoCaixa(equipamento.NmIdentificador ?? "", id_requisicao);
                         scope.Complete();
                     }
 

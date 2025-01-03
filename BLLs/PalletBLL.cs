@@ -1,4 +1,5 @@
 using Dapper;
+using dotnet_api.Integration;
 using dotnet_api.Models;
 using dotnet_api.ModelsSIAG;
 using grendene_caracois_api_csharp;
@@ -805,7 +806,7 @@ namespace dotnet_api.BLLs
                 var idEndereco = caracol.Substring(0, 1);
                 var posicaoX = caracol.Substring(1, 2);
 
-                var areas = await AreaArmazenagemBLL.GetAreasArmazenagemByIdentificadoCaracol(caracol);
+                var areas = await SiagApi.GetAreaArmazenagemByCaracol(caracol);
                 var resposta = new List<PalletModel>();
 
                 foreach (var area in areas)
@@ -921,7 +922,7 @@ namespace dotnet_api.BLLs
                 "info"
             );
 
-            var areaAtual = await AreaArmazenagemBLL.GetAreaArmazenagem(areaArmazenagemCaixa.IdAreaArmazenagem ?? "");
+            var areaAtual = await SiagApi.GetAreaArmazenagemById(long.Parse(areaArmazenagemCaixa.IdAreaArmazenagem ?? ""));
 
             if (areaAtual == null)
             {
@@ -992,8 +993,9 @@ namespace dotnet_api.BLLs
                 }
                 else
                 {
-                    areaArmazenagemCaixa = await AreaArmazenagemBLL.GetAreaArmazenagemByIdAgrupador(caixa.IdAgrupador.ToString());
+                    var areaArmazenagemCaixaList = await SiagApi.GetAreaArmazenagemByAgrupador(caixa.IdAgrupador);
 
+                    areaArmazenagemCaixa = areaArmazenagemCaixaList[0];
 
                     if (areaArmazenagemCaixa == null)
                     {
