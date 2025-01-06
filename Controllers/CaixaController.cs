@@ -1,6 +1,7 @@
 
 using System.Transactions;
 using dotnet_api.BLLs;
+using dotnet_api.DTOs.CaixaLeitura;
 using dotnet_api.Integration;
 using dotnet_api.ModelsSIAG;
 using grendene_caracois_api_csharp;
@@ -42,16 +43,23 @@ namespace dotnet_api.Controllers
                     if (palletAtualCaixa.FgStatus != 2)
                     {
                         equipamentoAtual = await CaixaBLL.LiberarCaixaPendenteEquipamento(equipamentoAtual);
+                        var caixaLeitura = new CaixaLeituraDTO
+                        {
+                            IdCaixa = caixa.IdCaixa,
+                            IdEquipamento = int.Parse(equipamentoAtual.IdEquipamento??""),
+                            IdOperador = int.Parse(equipamentoAtual.IdOperador ?? ""),
+                            IdAreaArmazenagem = long.Parse(areaArmazenagemCaixa?.IdAreaArmazenagem ?? ""),
+                            IdEndereco = int.Parse(areaArmazenagemCaixa?.IdEndereco?? ""),
+                            FgTipo = 12,
+                            FgStatus = 1,
+                            DtLeitura = DateTime.Now,
+                            FgCancelado = 0,
+                            IdPallet = null,
+                            IdOrdem = null,
+                            IdCaixaLeitura = 0,
+                        };
 
-                        await CaixaBLL.GravarErro(
-                            caixa.IdCaixa,
-                            equipamentoAtual.IdEquipamento ?? "",
-                            equipamentoAtual.IdOperador ?? "",
-                            areaArmazenagemCaixa.IdAreaArmazenagem,
-                            areaArmazenagemCaixa.IdEndereco,
-                            12,
-                            1
-                        );
+                        await SiagApi.CreateCaixaLeitura(caixaLeitura);
 
                         await CaixaBLL.InserirDesempenho(caixa.IdCaixa, equipamentoAtual.IdOperador ?? "", equipamentoAtual.IdEquipamento ?? "", null, 1);
 
@@ -71,15 +79,32 @@ namespace dotnet_api.Controllers
                     {
                         equipamentoAtual = await CaixaBLL.LiberarCaixaPendenteEquipamento(equipamentoAtual);
 
-                        await CaixaBLL.GravarErro(
-                            caixa.IdCaixa,
-                            equipamentoAtual.IdEquipamento ?? "",
-                            equipamentoAtual.IdOperador ?? "",
-                            areaArmazenagemAtualCaixa.IdAreaArmazenagem,
-                            areaArmazenagemAtualCaixa.IdEndereco,
-                            12,
-                            1
-                        );
+                        //await CaixaBLL.GravarErro(
+                        //    caixa.IdCaixa,
+                        //    equipamentoAtual.IdEquipamento ?? "",
+                        //    equipamentoAtual.IdOperador ?? "",
+                        //    areaArmazenagemAtualCaixa.IdAreaArmazenagem,
+                        //    areaArmazenagemAtualCaixa.IdEndereco,
+                        //    12,
+                        //    1
+                        //);
+                        var caixaLeitura = new CaixaLeituraDTO
+                        {
+                            IdCaixa = caixa.IdCaixa,
+                            IdEquipamento = int.Parse(equipamentoAtual.IdEquipamento ?? ""),
+                            IdOperador = int.Parse(equipamentoAtual.IdOperador ?? ""),
+                            IdAreaArmazenagem = long.Parse(areaArmazenagemCaixa?.IdAreaArmazenagem ?? ""),
+                            IdEndereco = int.Parse(areaArmazenagemCaixa?.IdEndereco ?? ""),
+                            FgTipo = 12,
+                            FgStatus = 1,
+                            DtLeitura = DateTime.Now,
+                            FgCancelado = 0,
+                            IdPallet = null,
+                            IdOrdem = null,
+                            IdCaixaLeitura = 0,
+                        };
+
+                        await SiagApi.CreateCaixaLeitura(caixaLeitura);
 
                         await CaixaBLL.InserirDesempenho(caixa.IdCaixa, equipamentoAtual.IdOperador ?? "", equipamentoAtual.IdEquipamento ?? "", null, 1);
 
@@ -91,7 +116,7 @@ namespace dotnet_api.Controllers
                     else
                     {
                         await SiagApi.RemoveEstufamento(caixa.IdCaixa ?? "");
-                        await CaixaBLL.DesvincularCaixaComPallet(identificadorCaracol, areaArmazenagemCaixa.PosicaoY ?? 0, caixa.IdCaixa);
+                        await SiagApi.DesvinculaCaixaPallet(identificadorCaracol,areaArmazenagemCaixa?.PosicaoY??0,caixa.IdCaixa, caixa.IdAgrupador??Guid.Empty,Guid.Empty);
                     }
                 }
             }
@@ -199,19 +224,37 @@ namespace dotnet_api.Controllers
                     }
 
                     var areaArmazenagemCaixaList = await SiagApi.GetAreaArmazenagemByAgrupador(caixa.IdAgrupador);
-                    var areaArmazenagemCaixa = areaArmazenagemCaixaList[0];
+                    var areaArmazenagemCaixa = areaArmazenagemCaixaList.FirstOrDefault();
 
                     if (areaArmazenagemCaixa == null)
                     {
-                        await CaixaBLL.GravarErro(
-                            idCaixa,
-                            equipamentoAtual.IdEquipamento ?? "",
-                            equipamentoAtual.IdOperador ?? "",
-                            null,
-                            null,
-                            12,
-                            1
-                        );
+                        //await CaixaBLL.GravarErro(
+                        //    idCaixa,
+                        //    equipamentoAtual.IdEquipamento ?? "",
+                        //    equipamentoAtual.IdOperador ?? "",
+                        //    null,
+                        //    null,
+                        //    12,
+                        //    1
+                        //);
+
+                        var caixaLeitura = new CaixaLeituraDTO
+                        {
+                            IdCaixa = idCaixa,
+                            IdEquipamento = int.Parse(equipamentoAtual.IdEquipamento ?? ""),
+                            IdOperador = int.Parse(equipamentoAtual.IdOperador ?? ""),
+                            IdAreaArmazenagem = null,
+                            IdEndereco = null,
+                            FgTipo = 12,
+                            FgStatus = 1,
+                            DtLeitura = DateTime.Now,
+                            FgCancelado = 0,
+                            IdPallet = null,
+                            IdOrdem = null,
+                            IdCaixaLeitura = 0,
+                        };
+
+                        await SiagApi.CreateCaixaLeitura(caixaLeitura);
 
                         await CaixaBLL.InserirDesempenho(idCaixa, equipamentoAtual.IdOperador ?? "", equipamentoAtual.IdEquipamento ?? "", null, 1);
 
@@ -247,7 +290,7 @@ namespace dotnet_api.Controllers
                         throw new Exception("Caracol da Caixa não encontrado!");
                     }
 
-                    var ultimaCaixaLeitura = await CaixaBLL.GetUltimaLeitura(equipamentoAtual.IdEquipamento ?? "", 3, 51);
+                    var ultimaCaixaLeitura = await SiagApi.GetUltimaLeitura(int.Parse(equipamentoAtual?.IdEquipamento??""), 3, 51);
 
                     // Verifica caixa pendente ----------------------------
                     equipamentoAtual = await VerificaCaixaPendente(caixa, identificadorCaracol, equipamentoAtual, areaArmazenagemCaixa);
@@ -286,15 +329,33 @@ namespace dotnet_api.Controllers
                                 equipamentoAtual.CdCaixaPendente = idCaixa;
                             }
 
-                            await CaixaBLL.GravarErro(
-                                idCaixa,
-                                equipamentoAtual.IdEquipamento ?? "",
-                                equipamentoAtual.IdOperador ?? "",
-                                areaArmazenagemCaixa.IdAreaArmazenagem,
-                                areaArmazenagemCaixa.IdEndereco,
-                                51,
-                                1
-                            );
+                            //await CaixaBLL.GravarErro(
+                            //    idCaixa,
+                            //    equipamentoAtual.IdEquipamento ?? "",
+                            //    equipamentoAtual.IdOperador ?? "",
+                            //    areaArmazenagemCaixa.IdAreaArmazenagem,
+                            //    areaArmazenagemCaixa.IdEndereco,
+                            //    51,
+                            //    1
+                            //);
+
+                            var caixaLeitura = new CaixaLeituraDTO
+                            {
+                                IdCaixa = idCaixa,
+                                IdEquipamento = int.Parse(equipamentoAtual.IdEquipamento ?? ""),
+                                IdOperador = int.Parse(equipamentoAtual.IdOperador ?? ""),
+                                IdAreaArmazenagem = long.Parse(areaArmazenagemCaixa?.IdAreaArmazenagem ?? ""),
+                                IdEndereco = int.Parse(areaArmazenagemCaixa?.IdEndereco ?? ""),
+                                FgTipo = 51,
+                                FgStatus = 1,
+                                DtLeitura = DateTime.Now,
+                                FgCancelado = 0,
+                                IdPallet = null,
+                                IdOrdem = null,
+                                IdCaixaLeitura = 0,
+                            };
+
+                            await SiagApi.CreateCaixaLeitura(caixaLeitura);
 
                             await LogBLL.GravarLog(
                                 id_requisicao,
@@ -316,15 +377,33 @@ namespace dotnet_api.Controllers
                     equipamentoAtual.CdCaixaPendente != null &&
                     equipamentoAtual.CdCaixaPendente != idCaixa)
                     {
-                        await CaixaBLL.GravarErro(
-                            idCaixa,
-                            equipamentoAtual.IdEquipamento ?? "",
-                            equipamentoAtual.IdOperador ?? "",
-                            areaArmazenagemCaixa.IdAreaArmazenagem,
-                            areaArmazenagemCaixa.IdEndereco,
-                            51,
-                            1
-                        );
+                        //await CaixaBLL.GravarErro(
+                        //    idCaixa,
+                        //    equipamentoAtual.IdEquipamento ?? "",
+                        //    equipamentoAtual.IdOperador ?? "",
+                        //    areaArmazenagemCaixa.IdAreaArmazenagem,
+                        //    areaArmazenagemCaixa.IdEndereco,
+                        //    51,
+                        //    1
+                        //);
+
+                        var caixaLeitura = new CaixaLeituraDTO
+                        {
+                            IdCaixa = idCaixa,
+                            IdEquipamento = int.Parse(equipamentoAtual.IdEquipamento ?? ""),
+                            IdOperador = int.Parse(equipamentoAtual.IdOperador ?? ""),
+                            IdAreaArmazenagem = long.Parse(areaArmazenagemCaixa?.IdAreaArmazenagem ?? ""),
+                            IdEndereco = int.Parse(areaArmazenagemCaixa?.IdEndereco ?? ""),
+                            FgTipo = 51,
+                            FgStatus = 1,
+                            DtLeitura = DateTime.Now,
+                            FgCancelado = 0,
+                            IdPallet = null,
+                            IdOrdem = null,
+                            IdCaixaLeitura = 0,
+                        };
+
+                        await SiagApi.CreateCaixaLeitura(caixaLeitura);
 
                         await LogBLL.GravarLog(
                                 id_requisicao,
@@ -346,15 +425,23 @@ namespace dotnet_api.Controllers
                     {
                         //var fgStatus = ultimaCaixaLeitura == null ? 3 : 1;
 
-                        await CaixaBLL.GravarErro(
-                            idCaixa,
-                            equipamentoAtual.IdEquipamento ?? "",
-                            equipamentoAtual.IdOperador ?? "",
-                            areaArmazenagemCaixa.IdAreaArmazenagem,
-                            areaArmazenagemCaixa.IdEndereco,
-                            51,
-                            1
-                        );
+                        var caixaLeitura = new CaixaLeituraDTO
+                        {
+                            IdCaixa = idCaixa,
+                            IdEquipamento = int.Parse(equipamentoAtual.IdEquipamento ?? ""),
+                            IdOperador = int.Parse(equipamentoAtual.IdOperador ?? ""),
+                            IdAreaArmazenagem = long.Parse(areaArmazenagemCaixa?.IdAreaArmazenagem ?? ""),
+                            IdEndereco = int.Parse(areaArmazenagemCaixa?.IdEndereco ?? ""),
+                            FgTipo = 51,
+                            FgStatus = 1,
+                            DtLeitura = DateTime.Now,
+                            FgCancelado = 0,
+                            IdPallet = null,
+                            IdOrdem = null,
+                            IdCaixaLeitura = 0,
+                        };
+
+                        await SiagApi.CreateCaixaLeitura(caixaLeitura);
 
                         await LogBLL.GravarLog(
                                 id_requisicao,
@@ -399,15 +486,33 @@ namespace dotnet_api.Controllers
                             );
                         }
 
-                        await CaixaBLL.GravarErro(
-                            idCaixa,
-                            equipamentoAtual.IdEquipamento ?? "",
-                            equipamentoAtual.IdOperador ?? "",
-                            areaArmazenagemCaixa.IdAreaArmazenagem,
-                            areaArmazenagemCaixa.IdEndereco,
-                            12,
-                            1
-                        );
+                        //await CaixaBLL.GravarErro(
+                        //    idCaixa,
+                        //    equipamentoAtual.IdEquipamento ?? "",
+                        //    equipamentoAtual.IdOperador ?? "",
+                        //    areaArmazenagemCaixa.IdAreaArmazenagem,
+                        //    areaArmazenagemCaixa.IdEndereco,
+                        //    12,
+                        //    1
+                        //);
+
+                        var caixaLeitura = new CaixaLeituraDTO
+                        {
+                            IdCaixa = idCaixa,
+                            IdEquipamento = int.Parse(equipamentoAtual.IdEquipamento ?? ""),
+                            IdOperador = int.Parse(equipamentoAtual.IdOperador ?? ""),
+                            IdAreaArmazenagem = null,
+                            IdEndereco = null,
+                            FgTipo = 12,
+                            FgStatus = 1,
+                            DtLeitura = DateTime.Now,
+                            FgCancelado = 0,
+                            IdPallet = null,
+                            IdOrdem = null,
+                            IdCaixaLeitura = 0,
+                        };
+
+                        await SiagApi.CreateCaixaLeitura(caixaLeitura);
 
                         await CaixaBLL.InserirDesempenho(idCaixa, equipamentoAtual.IdOperador ?? "", equipamentoAtual.IdEquipamento ?? "", null, 1);
 
@@ -497,7 +602,7 @@ namespace dotnet_api.Controllers
                             await PalletBLL.TrocaPallet(identificadorCaracol ?? "", areaArmazenagemCaixa, equipamentoAtual, idCaixa, caixa, id_requisicao);
 
                             var areaArmazenagemCaixaListS = await SiagApi.GetAreaArmazenagemByAgrupador(caixa.IdAgrupador);
-                            areaArmazenagemCaixa = areaArmazenagemCaixaListS[0];
+                            areaArmazenagemCaixa = areaArmazenagemCaixaListS.FirstOrDefault();
 
                             pallet = await PalletBLL.GetPalletByIdAreaArmazenagem(areaArmazenagemCaixa.IdAreaArmazenagem);
                         }
@@ -534,7 +639,7 @@ namespace dotnet_api.Controllers
                         await PalletBLL.TrocaPallet(identificadorCaracol ?? "", areaArmazenagemCaixa, equipamentoAtual, idCaixa, caixa, id_requisicao);
 
                         var areaArmazenagemCaixaListT = await SiagApi.GetAreaArmazenagemByAgrupador(caixa.IdAgrupador);
-                        areaArmazenagemCaixa = areaArmazenagemCaixaListT[0];
+                        areaArmazenagemCaixa = areaArmazenagemCaixaListT.FirstOrDefault();
 
                         pallet = await PalletBLL.GetPalletByIdAreaArmazenagem(areaArmazenagemCaixa.IdAreaArmazenagem);
                     }
@@ -703,7 +808,7 @@ namespace dotnet_api.Controllers
                     */
 
                     var areaArmazenagemList = await SiagApi.GetAreaArmazenagemByAgrupador(caixa.IdAgrupador);
-                    var areaArmazenagem = areaArmazenagemList[0];
+                    var areaArmazenagem = areaArmazenagemList.FirstOrDefault();
 
 
                     if (areaArmazenagem == null)
@@ -750,11 +855,11 @@ namespace dotnet_api.Controllers
                             "info"
                         );
 
-                        await CaixaBLL.VincularCaixaComPallet(identificadorCaracol, areaArmazenagem.PosicaoY ?? 0, idCaixa, caixa.IdAgrupador.ToString() ?? "", id_requisicao);
+                        await SiagApi.VinculaCaixaPallet(identificadorCaracol, areaArmazenagem.PosicaoY ?? 0, idCaixa, caixa.IdAgrupador?? Guid.Empty, id_requisicao);
                         await SiagApi.EstufarCaixa(idCaixa, id_requisicao);
                         await CaixaBLL.InserirDesempenho(idCaixa, equipamento.IdOperador, equipamento.IdEquipamento ?? "", areaArmazenagem.IdAreaArmazenagem ?? "", 0);
 
-                        var temCaixasPendentes = await CaixaBLL.TemCaixasPendentes(caixa.IdAgrupador.ToString() ?? "");
+                        var temCaixasPendentes = await SiagApi.TemCaixaPendente(caixa.IdAgrupador ?? Guid.Empty);
 
                         if (!temCaixasPendentes)
                         {
@@ -773,8 +878,8 @@ namespace dotnet_api.Controllers
                             await CaixaBLL.AcenderLuzVermelha(equipamento.NmIdentificador ?? "", areaArmazenagem.PosicaoY, id_requisicao);
                             await SiagApi.LiberaAgrupador(caixa.IdAgrupador ?? Guid.Empty, id_requisicao);
                             await PalletBLL.GerarAtividadePalletCheio(pallet.IdPallet ?? "", areaArmazenagem.IdAreaArmazenagem ?? "");
-                            await CaixaBLL.EncherPallet(pallet.IdPallet ?? "", id_requisicao);
-                            await CaixaBLL.LiberarAreaArmazenagem(caixa.IdAgrupador.ToString() ?? "", id_requisicao);
+                            await SiagApi.EncherPallet(int.Parse(pallet.IdPallet ?? ""), id_requisicao);
+                            await SiagApi.LiberarAreaArmazenagemAsync(caixa.IdAgrupador ?? Guid.Empty, id_requisicao);
                         }
 
                         await SiagApi.EmitirEstufamentoCaixa(equipamento.NmIdentificador ?? "", id_requisicao);

@@ -351,7 +351,7 @@ namespace dotnet_api.BLLs
                         else
                         {
                             var areaArmazenagemList = await SiagApi.GetAreaArmazenagemByAgrupador(caixa.IdAgrupador);
-                            var areaArmazenagem = areaArmazenagemList[0];
+                            var areaArmazenagem = areaArmazenagemList.FirstOrDefault();
 
                             if (areaArmazenagem == null)
                             {
@@ -588,7 +588,7 @@ namespace dotnet_api.BLLs
                     throw new Exception("Caixa não encotrada!");
                 }
 
-                var pallet = await PalletBLL.GetPallet(caixa.IdPallet ?? "");
+                var pallet = await PalletBLL.GetPallet(caixa.IdPallet?.ToString() ?? "");
 
                 if (pallet == null)
                 {
@@ -721,7 +721,7 @@ namespace dotnet_api.BLLs
                 if (caixa == null)
                     throw new Exception("Caixa não encotrada!");
 
-                var pallet = await PalletBLL.GetPallet(caixa.IdPallet ?? "");
+                var pallet = await PalletBLL.GetPallet(caixa.IdPallet?.ToString() ?? "");
 
                 if (pallet == null)
                     throw new Exception("Pallet não encontrado.");
